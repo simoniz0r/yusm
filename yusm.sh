@@ -12,7 +12,17 @@ function snapinstall() {
     PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap install $SNAP\n")"
     case $? in
         0)
-            echo "$PASSWORD" | sudo -S snap install "$SNAP" 2>&1 | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --progress --pulsate --text="Installing snap $SNAP" --mouse --on-top --button=gtk-ok
+            touch /tmp/yusmfakeprogress
+            { echo "$PASSWORD" | sudo -S snap install "$SNAP" && FAKEPERCENT=100; rm /tmp/yusmfakeprogress; } &
+            FAKEPERCENT=0
+            while [ -f "/tmp/yusmfakeprogress" ]; do
+                echo "$FAKEPERCENT"
+                sleep 0.5
+                FAKEPERCENT=$(($FAKEPERCENT+1))
+                if [ $FAKEPERCENT -eq 99 ]; then
+                    FAKEPERCENT=$(($FAKEPERCENT-1))
+                fi
+            done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --progress --percent="$FAKEPERCENT" --text="Installing snap $SNAP" --mouse --on-top --button=gtk-ok
             exit 1
             ;;
         1)
