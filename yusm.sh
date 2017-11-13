@@ -83,7 +83,11 @@ function main() {
             mainstart
             ;;
         1)
-            rm /tmp/yusmtab*
+            rm /tmp/yusmtab1
+            rm /tmp/yusmtab2
+            rm /tmp/yusmtab3
+            rm /tmp/yusmlist.rest
+            rm /tmp/yusmlist2.rest
             exit 0
             ;;
     esac
