@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=yusm
+Comment=Yad uAppExplorer Snap Manager - Unofficial app for managing snaps based on uappexplorer.com/snaps
+Exec=/opt/yusm/yusm.sh
+Icon=/opt/yusm/yusm.png
+Type=Application
+Terminal=false
+StartupNotify=false
+Categories=Utilities;
