@@ -12,7 +12,7 @@ function snapinstall() {
     PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap install $SNAP\n")"
     case $? in
         0)
-            echo "$PASSWORD" | sudo -S snap install "$SNAP" 2>&1 | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --text-info --listen --mouse --on-top --height 300 --width 800 --tail --no-markup --no-escape --button=gtk-ok
+            echo "$PASSWORD" | sudo -S snap install "$SNAP" 2>&1 | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --progress --pulsate --text="Installing snap $SNAP" --mouse --on-top --button=gtk-ok
             exit 1
             ;;
         1)
@@ -50,7 +50,7 @@ function snapremove() {
     PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap remove $SNAP\n")"
     case $? in
         0)
-            echo "$PASSWORD" | sudo -S snap remove "$SNAP" 2>&1 | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --text-info --listen --mouse --on-top --height 300 --width 800 --tail --no-markup --no-escape --button=gtk-ok
+            echo "$PASSWORD" | sudo -S snap remove "$SNAP" 2>&1 | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --progress --pulsate --text="Removing snap $SNAP" --mouse --on-top --button=gtk-ok
             exit 0
             ;;
         1)
