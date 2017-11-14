@@ -13,9 +13,17 @@ function snapinstall() {
     case $? in
         0)
             touch /tmp/yusmfakeprogress
-            { echo "$PASSWORD" | sudo -S snap install "$SNAP" && FAKEPERCENT=100; rm /tmp/yusmfakeprogress; } &
             FAKEPERCENT=0
+            echo "$PASSWORD" | sudo -S snap install "$SNAP" 2> /tmp/yusmsnapinstallstatus && rm /tmp/yusmfakeprogress &
             while [ -f "/tmp/yusmfakeprogress" ]; do
+                case $(cat /tmp/yusmsnapinstallstatus) in
+                    *--classic*)
+                        yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --error --mouse --text="Error installing $SNAP!\n$SNAP is in classic confinment mode.\nClassic confinement snaps are not currently supported though yusm." --button=gtk-ok
+                        /tmp/yusmsnapinstallstatus
+                        rm /tmp/yusmfakeprogress
+                        exit 0
+                        ;;
+                esac
                 echo "$FAKEPERCENT"
                 sleep 0.5
                 FAKEPERCENT=$(($FAKEPERCENT+1))
@@ -23,6 +31,7 @@ function snapinstall() {
                     FAKEPERCENT=$(($FAKEPERCENT-1))
                 fi
             done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --progress --percent="$FAKEPERCENT" --text="Installing snap $SNAP" --mouse --on-top --button=gtk-ok
+            rm /tmp/yusmsnapinstallstatus
             exit 1
             ;;
         1)
