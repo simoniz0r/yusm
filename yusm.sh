@@ -12,16 +12,18 @@ function snapinstall() {
     PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap install $SNAP\n")"
     case $? in
         0)
-            touch /tmp/yusmfakeprogress
+            touch /tmp/yusmsnapinstallstatus
             FAKEPERCENT=0
-            echo "$PASSWORD" | sudo -S snap install "$SNAP" 2> /tmp/yusmsnapinstallstatus && rm /tmp/yusmfakeprogress &
-            while [ -f "/tmp/yusmfakeprogress" ]; do
+            echo "$PASSWORD" | sudo -S snap install "$SNAP" 2> /tmp/yusmsnapinstallstatus && rm /tmp/yusmsnapinstallstatus &
+            while [ -f "/tmp/yusmsnapinstallstatus" ]; do
                 case $(cat /tmp/yusmsnapinstallstatus) in
                     *--classic*)
-                        yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --error --mouse --text="Error installing $SNAP!\n$SNAP is in classic confinment mode.\nClassic confinement snaps are not currently supported though yusm." --button=gtk-ok
-                        /tmp/yusmsnapinstallstatus
-                        rm /tmp/yusmfakeprogress
-                        exit 0
+                        rm /tmp/yusmsnapinstallstatus
+                        yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --error --mouse --on-top --text="Error installing $SNAP!\n$SNAP is in classic confinment mode.\nClassic confinement snaps are not currently supported though yusm." --button=gtk-ok
+                        ;;
+                    *incorrect*)
+                        rm /tmp/yusmsnapinstallstatus
+                        yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --error --mouse --on-top --text="Error installing $SNAP!\nIncorrect password for sudo snap install $SNAP!" --button=gtk-ok
                         ;;
                 esac
                 echo "$FAKEPERCENT"
@@ -30,8 +32,8 @@ function snapinstall() {
                 if [ $FAKEPERCENT -eq 99 ]; then
                     FAKEPERCENT=$(($FAKEPERCENT-1))
                 fi
-            done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --progress --percent="$FAKEPERCENT" --text="Installing snap $SNAP" --mouse --on-top --button=gtk-ok
-            rm /tmp/yusmsnapinstallstatus
+            done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --progress --percent="$FAKEPERCENT" --text="Installing snap $SNAP\n" --mouse --on-top --no-buttons --auto-close
+            rm -f /tmp/yusmsnapinstallstatus
             exit 1
             ;;
         1)
@@ -69,7 +71,24 @@ function snapremove() {
     PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap remove $SNAP\n")"
     case $? in
         0)
-            echo "$PASSWORD" | sudo -S snap remove "$SNAP" 2>&1 | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --progress --pulsate --text="Removing snap $SNAP" --mouse --on-top --button=gtk-ok
+            touch /tmp/yusmsnapremovestatus
+            FAKEPERCENT=0
+            echo "$PASSWORD" | sudo -S snap remove "$SNAP" 2> /tmp/yusmsnapremovestatus && rm /tmp/yusmsnapremovestatus &
+            while [ -f "/tmp/yusmsnapremovestatus" ]; do
+                case $(cat /tmp/yusmsnapremovestatus) in
+                    *incorrect*)
+                        rm /tmp/yusmsnapremovestatus
+                        yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --error --mouse --on-top --text="Error removing $SNAP!\nIncorrect password for sudo snap install $SNAP!" --button=gtk-ok
+                        ;;
+                esac
+                echo "$FAKEPERCENT"
+                sleep 0.5
+                FAKEPERCENT=$(($FAKEPERCENT+1))
+                if [ $FAKEPERCENT -eq 99 ]; then
+                    FAKEPERCENT=$(($FAKEPERCENT-1))
+                fi
+            done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --progress --percent="$FAKEPERCENT" --text="Removing snap $SNAP\n" --mouse --on-top --no-buttons --auto-close
+            rm -f /tmp/yusmsnapremovestatus
             exit 0
             ;;
         1)
