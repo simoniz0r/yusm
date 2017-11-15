@@ -104,7 +104,7 @@ function mainstart() {
 
 function main() {
     KEY="$RANDOM"
-    echo "$(snap list | tail -n +3 | cut -f1 -d' ')" > /tmp/yusmlist.rest
+    echo "$(snap list | tail -n +2 | grep -vw 'core' | cut -f1 -d' ')" > /tmp/yusmlist.rest
     echo "Refresh all snaps" > /tmp/yusmlist2.rest
     echo "$(snap list | tail -n +2 | cut -f1 -d' ')" >> /tmp/yusmlist2.rest
     yad --plug="$KEY" --tabnum=1 --html --uri="https://uappexplorer.com/snaps?sort=title" --browser --uri-handler='bash -c "snapinstall %s"' &> /tmp/yusmtab1 &
