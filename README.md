@@ -3,3 +3,5 @@
 Dependencies: snap, yad (version 0.39.0 or greater)
 
 ![yusm-screenshot](/Screenshot.png)
+
+![yusm-screenshot2](/Screenshot2.png)
