@@ -18,10 +18,12 @@ function snapinstall() {
             while [ -f "/tmp/yusmsnapinstallstatus" ]; do
                 case $(cat /tmp/yusmsnapinstallstatus) in
                     *--classic*)
+                        echo "0"
                         rm /tmp/yusmsnapinstallstatus
                         yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --error --mouse --on-top --text="Error installing $SNAP!\n$SNAP is in classic confinment mode.\nClassic confinement snaps are not currently supported though yusm." --button=gtk-ok
                         ;;
                     *incorrect*)
+                        echo "0"
                         rm /tmp/yusmsnapinstallstatus
                         yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --error --mouse --on-top --text="Error installing $SNAP!\nIncorrect password for sudo snap install $SNAP!" --button=gtk-ok
                         ;;
@@ -44,7 +46,10 @@ function snapinstall() {
 export -f snapinstall
 
 function snaprefresh() {
-    SNAP="$(echo "$@" | cut -f1 -d' ')"
+    SNAP="$(snap list | tail -n +2 | cut -f1 -d' ' | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --list --mouse --width 400 --height 500 --separator="" --text="Refresh installed snaps\n" --column="Snap Name" --button=gtk-cancel:1 --button=gtk-ok:0)"
+    if [ -z "$SNAP" ]; then
+        exit 0
+    fi
     case $SNAP in
         *Refresh*)
             SNAP=""
@@ -67,7 +72,10 @@ function snaprefresh() {
 export -f snaprefresh
 
 function snapremove() {
-    SNAP="$(echo "$@" | cut -f1 -d' ')"
+    SNAP="$(snap list | tail -n +2 | cut -f1 -d' ' | grep -vw 'core' | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --list --mouse --width 400 --height 500 --separator="" --text="Remove installed snaps\n" --column="Snap Name" --button=gtk-cancel:1 --button=gtk-ok:0)"
+    if [ -z "$SNAP" ]; then
+        exit 0
+    fi
     PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap remove $SNAP\n")"
     case $? in
         0)
@@ -104,28 +112,18 @@ function mainstart() {
 
 function main() {
     KEY="$RANDOM"
-    echo "$(snap list | tail -n +2 | grep -vw 'core' | cut -f1 -d' ')" > /tmp/yusmlist.rest
-    echo "Refresh all snaps" > /tmp/yusmlist2.rest
-    echo "$(snap list | tail -n +2 | cut -f1 -d' ')" >> /tmp/yusmlist2.rest
     yad --plug="$KEY" --tabnum=1 --html --uri="https://uappexplorer.com/snaps?sort=title" --browser --uri-handler='bash -c "snapinstall %s"' &> /tmp/yusmtab1 &
-    yad --plug="$KEY" --tabnum=2 --list --text="Double click a snap to refresh it" --dclick-action='bash -c "snaprefresh %s"' --column="Snap Name" --rest="/tmp/yusmlist2.rest" &> /tmp/yusmtab2 &
-    yad --plug="$KEY" --tabnum=3 --list --text="Double click a snap to remove it" --dclick-action='bash -c "snapremove %s"' --column="Snap Name" --rest="/tmp/yusmlist.rest" &> /tmp/yusmtab3 &
-    yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --height 720 --width 1280 --notebook --key="$KEY" --tab="Browse snaps" --tab="Refresh snaps" --tab="Remove snaps" --button="Reload"\!gtk-refresh:0 --button=gtk-close:1
+    yad --plug="$KEY" --tabnum=2 --form --text="Manage installed snaps\n" --text-align="center" --field="Refresh snaps!gtk-refresh":BTN 'bash -c "snaprefresh"' --field="Remove snaps!gtk-delete":BTN 'bash -c "snapremove"'  &> /tmp/yusmtab2 &
+    yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --height 720 --width 1280 --notebook --key="$KEY" --tab="Browse snaps" --tab="Manage snaps" --button="Reload"\!gtk-refresh:0 --button=gtk-close:1
     case $? in
         0)
             rm /tmp/yusmtab1
             rm /tmp/yusmtab2
-            rm /tmp/yusmtab3
-            rm /tmp/yusmlist.rest
-            rm /tmp/yusmlist2.rest
             mainstart
             ;;
         1)
             rm /tmp/yusmtab1
             rm /tmp/yusmtab2
-            rm /tmp/yusmtab3
-            rm /tmp/yusmlist.rest
-            rm /tmp/yusmlist2.rest
             exit 0
             ;;
     esac
