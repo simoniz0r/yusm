@@ -9,78 +9,32 @@ function snapinstall() {
         exit 1
     fi
     SNAP="$(echo "$@" | cut -f3 -d'/')"
-    PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap install $SNAP\n")"
+    sudo -A snap install "$SNAP" 2>&1 | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --text-info --mouse --on-top --text="Installing $SNAP..." --height 300 --width 800 --tail --no-markup --no-escape --button="Classic install!gtk-home":1 --button=gtk-close:0
     case $? in
-        0)
-            touch /tmp/yusmsnapinstallstatus
-            PERCENT=0
-            echo "$PASSWORD" | sudo -S snap install "$SNAP" > /tmp/yusmsnapinstallstatus 2>&1 && rm /tmp/yusmsnapinstallstatus &
-            while [ -f "/tmp/yusmsnapinstallstatus" ]; do
-                case $(cat /tmp/yusmsnapinstallstatus) in
-                    *--classic*)
-                        echo "100"
-                        rm /tmp/yusmsnapinstallstatus
-                        yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --error --mouse --on-top --borders=15 --text="Error installing $SNAP!\n\nThis revision of snap $SNAP was published using classic confinement and thus may perform\narbitrary system changes outside of the security sandbox that snaps are usually confined to,\nwhich may put your system at risk.\n\n\nIf you understand and want to proceed, click yes." --button=gtk-no:1 --button=gtk-yes:0
-                        case $? in
-                            1)
-                                exit 0
-                                ;;
-                            0)
-                                snapclassicinstall "$SNAP"
-                                exit 0
-                                ;;
-                        esac
-                        ;;
-                    *incorrect*)
-                        echo "100"
-                        rm /tmp/yusmsnapinstallstatus
-                        yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --borders=15 --error --mouse --on-top --text="Error installing $SNAP!\nIncorrect password for sudo snap install $SNAP!" --button=gtk-ok
-                        ;;
-                esac
-                cat /tmp/yusmsnapinstallstatus | tr ' ' '\n' | tac | grep -m1 '%' | cut -f1 -d'%'
-                sleep 0.5
-            done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --borders=15 --progress --pulsate --percent="$PERCENT" --text="Installing snap $SNAP\n" --mouse --on-top --no-buttons --auto-close
-            rm -f /tmp/yusmsnapinstallstatus
-            exit 1
-            ;;
         1)
+            snapclassicinstall "$SNAP"
             exit 0
             ;;
+        0)
+            exit 1
+            ;;
     esac
+    exit 1
 }
 export -f snapinstall
 
 function snapclassicinstall() {
     SNAP="$1"
-    PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap install $SNAP --classic\n")"
-    case $? in
-        0)
-            touch /tmp/yusmsnapclassicstatus
-            CLASSIC_PERCENT=0
-            echo "$PASSWORD" | sudo -S snap install "$SNAP" --classic > /tmp/yusmsnapclassicstatus 2>&1 && rm /tmp/yusmsnapclassicstatus &
-            while [ -f "/tmp/yusmsnapclassicstatus" ]; do
-                case $(cat /tmp/yusmsnapclassicstatus) in
-                    *incorrect*)
-                        echo "100"
-                        rm /tmp/yusmsnapclassicstatus
-                        yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --borders=15 --error --mouse --on-top --text="Error installing $SNAP!\nIncorrect password for sudo snap install $SNAP!" --button=gtk-ok
-                        ;;
-                esac
-                cat /tmp/yusmsnapclassicstatus | tr ' ' '\n' | tac | grep -m1 '%' | cut -f1 -d'%'
-                sleep 0.5
-            done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --borders=15 --progress --pulsate --percent="$CLASSIC_PERCENT" --text="Installing snap $SNAP\n" --mouse --on-top --no-buttons --auto-close
-            rm -f /tmp/yusmsnapclassicstatus
-            exit 1
-            ;;
-        1)
-            exit 0
-            ;;
-    esac
+    sudo -A snap install "$SNAP" --classic 2>&1 | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --text-info --mouse --on-top --text="Installing $SNAP..." --height 300 --width 800 --tail --no-markup --no-escape --button=gtk-close
+    exit 1
 }
 export -f snapclassicinstall
 
 function snaprefresh() {
-    SNAP="$(( echo "Refresh all snaps" ; snap list | tail -n +2 | cut -f1 -d' ' ) | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --list --mouse --width 400 --height 500 --separator="" --text="Refresh installed snaps\n" --column="Snap Name" --button=gtk-cancel:1 --button=gtk-ok:0)"
+    echo "Refresh all snaps" > /tmp/yusmrefreshlist
+    snap list | tail -n +2 | cut -f1 -d' ' >> /tmp/yusmrefreshlist
+    SNAP="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --list --rest="/tmp/yusmrefreshlist" --mouse --width 400 --height 500 --separator="" --text="Refresh installed snaps\n" --column="Snap Name" --button=gtk-cancel:1 --button=gtk-ok:0)"
+    rm /tmp/yusmrefreshlist
     if [ -z "$SNAP" ]; then
         exit 0
     fi
@@ -92,16 +46,7 @@ function snaprefresh() {
             SNAP="$SNAP"
             ;;
     esac
-    PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap refresh $SNAP\n")"
-    case $? in
-        0)
-            echo "$PASSWORD" | sudo -S snap refresh "$SNAP" 2>&1 | cut -f2- -d':' | cut -f2- -d'K' | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --text-info --mouse --on-top --height 300 --width 800 --tail --no-markup --no-escape --button=gtk-ok
-            exit 0
-            ;;
-        1)
-            exit 0
-            ;;
-    esac
+    sudo -A snap refresh "$SNAP" 2>&1 | cut -f2- -d':' | cut -f2- -d'K' | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --text-info --mouse --on-top --height 300 --width 800 --tail --no-markup --no-escape --button=gtk-ok
 }
 export -f snaprefresh
 
@@ -110,12 +55,13 @@ function snapremove() {
     if [ -z "$SNAP" ]; then
         exit 0
     fi
-    PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap remove $SNAP\n")"
+    sudo -A snap remove "$SNAP" 2> /tmp/yusmsnapremovestatus && rm /tmp/yusmsnapremovestatus &
+    # PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap remove $SNAP\n")"
     case $? in
         0)
             touch /tmp/yusmsnapremovestatus
             FAKEPERCENT=0
-            echo "$PASSWORD" | sudo -S snap remove "$SNAP" 2> /tmp/yusmsnapremovestatus && rm /tmp/yusmsnapremovestatus &
+            # echo "$PASSWORD" | sudo -S snap remove "$SNAP" 2> /tmp/yusmsnapremovestatus && rm /tmp/yusmsnapremovestatus &
             while [ -f "/tmp/yusmsnapremovestatus" ]; do
                 case $(cat /tmp/yusmsnapremovestatus) in
                     *incorrect*)
@@ -163,5 +109,24 @@ function main() {
             ;;
     esac
 }
+
+SUDO_ASKPASS="$(which ssh-askpass)"
+case $SUDO_ASKPASS in
+    *not*)
+        SUDO_ASKPASS="$(which gksu)"
+        case $SUDO_ASKPASS in
+            *not*)
+                yad --error --text="Missing required ssh-askpass or gksu"
+                exit 1
+                ;;
+            *)
+                export SUDO_ASKPASS
+                ;;
+        esac
+        ;;
+    *)
+        export SUDO_ASKPASS
+        ;;
+esac
 
 main
