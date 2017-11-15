@@ -9,11 +9,12 @@ function snapinstall() {
         exit 1
     fi
     SNAP="$(echo "$@" | cut -f3 -d'/')"
-    SSH_ASKPASS="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap install $SNAP\n")" sudo snap install "$SNAP" > /tmp/yusmsnapinstallstatus 2>&1 && rm /tmp/yusmsnapinstallstatus &
+    PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap install $SNAP\n")"
     case $? in
         0)
             touch /tmp/yusmsnapinstallstatus
             PERCENT=0
+            echo "$PASSWORD" | sudo -S snap install "$SNAP" > /tmp/yusmsnapinstallstatus 2>&1 && rm /tmp/yusmsnapinstallstatus &
             while [ -f "/tmp/yusmsnapinstallstatus" ]; do
                 case $(cat /tmp/yusmsnapinstallstatus) in
                     *--classic*)
