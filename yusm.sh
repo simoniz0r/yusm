@@ -9,12 +9,11 @@ function snapinstall() {
         exit 1
     fi
     SNAP="$(echo "$@" | cut -f3 -d'/')"
-    PASSWORD="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap install $SNAP\n")"
+    SSH_ASKPASS="$(yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --entry --mouse --on-top --hide-text --text="Enter password for sudo snap install $SNAP\n")" sudo snap install "$SNAP" > /tmp/yusmsnapinstallstatus 2>&1 && rm /tmp/yusmsnapinstallstatus &
     case $? in
         0)
             touch /tmp/yusmsnapinstallstatus
             PERCENT=0
-            echo "$PASSWORD" | sudo -S snap install "$SNAP" > /tmp/yusmsnapinstallstatus 2>&1 && rm /tmp/yusmsnapinstallstatus &
             while [ -f "/tmp/yusmsnapinstallstatus" ]; do
                 case $(cat /tmp/yusmsnapinstallstatus) in
                     *--classic*)
@@ -39,7 +38,7 @@ function snapinstall() {
                 esac
                 cat /tmp/yusmsnapinstallstatus | tr ' ' '\n' | tac | grep -m1 '%' | cut -f1 -d'%'
                 sleep 0.5
-            done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --borders=15 --progress --percent="$PERCENT" --text="Installing snap $SNAP\n" --mouse --on-top --no-buttons --auto-close
+            done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --borders=15 --progress --pulsate --percent="$PERCENT" --text="Installing snap $SNAP\n" --mouse --on-top --no-buttons --auto-close
             rm -f /tmp/yusmsnapinstallstatus
             exit 1
             ;;
@@ -68,7 +67,7 @@ function snapclassicinstall() {
                 esac
                 cat /tmp/yusmsnapclassicstatus | tr ' ' '\n' | tac | grep -m1 '%' | cut -f1 -d'%'
                 sleep 0.5
-            done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --borders=15 --progress --percent="$CLASSIC_PERCENT" --text="Installing snap $SNAP\n" --mouse --on-top --no-buttons --auto-close
+            done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --borders=15 --progress --pulsate --percent="$CLASSIC_PERCENT" --text="Installing snap $SNAP\n" --mouse --on-top --no-buttons --auto-close
             rm -f /tmp/yusmsnapclassicstatus
             exit 1
             ;;
