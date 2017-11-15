@@ -46,7 +46,7 @@ function snapinstall() {
 export -f snapinstall
 
 function snaprefresh() {
-    SNAP="$(snap list | tail -n +2 | cut -f1 -d' ' | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --list --mouse --width 400 --height 500 --separator="" --text="Refresh installed snaps\n" --column="Snap Name" --button=gtk-cancel:1 --button=gtk-ok:0)"
+    SNAP="$((echo "Refresh all snaps" ; snap list | tail -n +2 | cut -f1 -d' ' ) | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --list --mouse --width 400 --height 500 --separator="" --text="Refresh installed snaps\n" --column="Snap Name" --button=gtk-cancel:1 --button=gtk-ok:0)"
     if [ -z "$SNAP" ]; then
         exit 0
     fi
