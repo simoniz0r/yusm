@@ -37,7 +37,7 @@ function snapinstall() {
                         yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --borders=15 --error --mouse --on-top --text="Error installing $SNAP!\nIncorrect password for sudo snap install $SNAP!" --button=gtk-ok
                         ;;
                 esac
-                cat /tmp/yusmsnapinstallstatus | tr ' ' '\n' | tac | grep -m1 '%' | cut -f1 -d'.'
+                cat /tmp/yusmsnapinstallstatus | tr ' ' '\n' | tac | grep -m1 '%' | cut -f1 -d'%'
                 sleep 0.5
             done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --borders=15 --progress --percent="$PERCENT" --text="Installing snap $SNAP\n" --mouse --on-top --no-buttons --auto-close
             rm -f /tmp/yusmsnapinstallstatus
@@ -66,7 +66,7 @@ function snapclassicinstall() {
                         yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --borders=15 --error --mouse --on-top --text="Error installing $SNAP!\nIncorrect password for sudo snap install $SNAP!" --button=gtk-ok
                         ;;
                 esac
-                cat /tmp/yusmsnapclassicstatus | tr ' ' '\n' | tac | grep -m1 '%' | cut -f1 -d'.'
+                cat /tmp/yusmsnapclassicstatus | tr ' ' '\n' | tac | grep -m1 '%' | cut -f1 -d'%'
                 sleep 0.5
             done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --borders=15 --progress --percent="$CLASSIC_PERCENT" --text="Installing snap $SNAP\n" --mouse --on-top --no-buttons --auto-close
             rm -f /tmp/yusmsnapclassicstatus
