@@ -14,7 +14,7 @@ function snapinstall() {
         0)
             touch /tmp/yusmsnapinstallstatus
             PERCENT=0
-            echo "$PASSWORD" | sudo -S snap install "$SNAP" 2>&1> /tmp/yusmsnapinstallstatus && rm /tmp/yusmsnapinstallstatus &
+            echo "$PASSWORD" | sudo -S snap install "$SNAP" > /tmp/yusmsnapinstallstatus 2>&1 && rm /tmp/yusmsnapinstallstatus &
             while [ -f "/tmp/yusmsnapinstallstatus" ]; do
                 case $(cat /tmp/yusmsnapinstallstatus) in
                     *--classic*)
@@ -57,7 +57,7 @@ function snapclassicinstall() {
         0)
             touch /tmp/yusmsnapclassicstatus
             CLASSIC_PERCENT=0
-            { echo "$PASSWORD" | sudo -S snap install "$SNAP" --classic 2>&1> /tmp/yusmsnapclassicstatus && rm /tmp/yusmsnapclassicstatus; } &
+            echo "$PASSWORD" | sudo -S snap install "$SNAP" --classic > /tmp/yusmsnapclassicstatus 2>&1 && rm /tmp/yusmsnapclassicstatus &
             while [ -f "/tmp/yusmsnapclassicstatus" ]; do
                 case $(cat /tmp/yusmsnapclassicstatus) in
                     *incorrect*)
