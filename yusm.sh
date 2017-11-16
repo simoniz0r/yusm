@@ -9,9 +9,11 @@ function snapinstall() {
         exit 1
     fi
     SNAP="$(echo "$@" | cut -f3 -d'/')"
-    FAKEPERCENT=0
     touch /tmp/yusmsnapinstallstatus
+    INSTALL_SIZE=$(snap info $SNAP | grep -m1 'stable:' | tr -d '[:blank:][:alpha:]' | cut -f2 -d')' | cut -f1 -d'-' | cut -f1 -d'.')
+    PERCENT=0
     sudo -A snap install "$SNAP" > /tmp/yusmsnapinstallstatus 2>&1 &
+    sleep 2
     while [ -f "/tmp/yusmsnapinstallstatus" ]; do
         if grep -qw 'installed' /tmp/yusmsnapinstallstatus; then
             echo 100
@@ -22,10 +24,15 @@ function snapinstall() {
             echo "Error installing $SNAP!  This revision of snap $SNAP was published using classic confinement and thus may perform arbitrary system changes outside of the security sandbox that snaps are usually confined to, which may put your system at risk.  If you understand and want to proceed, click 'Classic install'."
             rm /tmp/yusmsnapinstallstatus
         else
-            echo "$FAKEPERCENT"
+            if [ $PERCENT -lt 90 ]; then
+                PARTIAL_SIZE=$(du -h -a --max-depth=1 "/var/lib/snapd/snaps/" | grep -wm1 '.*.partial' | tr -d '[:blank:][:alpha:]' | cut -f1 -d'/' | cut -f1 -d'.')
+                PERCENT=$((${PARTIAL_SIZE}00/$INSTALL_SIZE))
+                echo "$PERCENT"
+            else
+                echo 90
+            fi
             echo "Installing $SNAP..."
-            sleep 1
-            FAKEPERCENT=$(($FAKEPERCENT+1))
+            sleep 0.5
         fi
     done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --list --limit=1 --mouse --on-top --text="Installing $SNAP..." --height 300 --width 800 --tail --no-markup --no-escape --button="Classic install!gtk-home":1 --button=gtk-close:0 --wrap-width=400 --wrap-cols=2 --no-selection --no-click --column="Progress":BAR --column="Status":TEXT
     case $? in
@@ -42,7 +49,8 @@ export -f snapinstall
 
 function snapclassicinstall() {
     SNAP="$1"
-    FAKEPERCENT=0
+    INSTALL_SIZE=$(snap info $SNAP | grep -m1 'stable:' | tr -d '[:blank:][:alpha:]' | cut -f2 -d')' | cut -f1 -d'-' | cut -f1 -d'.')
+    PERCENT=0
     touch /tmp/yusmsnapinstallstatus
     sudo -A snap install "$SNAP" --classic > /tmp/yusmsnapinstallstatus 2>&1 &
     while [ -f "/tmp/yusmsnapinstallstatus" ]; do
@@ -51,10 +59,15 @@ function snapclassicinstall() {
             cat /tmp/yusmsnapinstallstatus
             rm /tmp/yusmsnapinstallstatus
         else
-            echo "$FAKEPERCENT"
+            if [ $PERCENT -lt 90 ]; then
+                PARTIAL_SIZE=$(du -h -a --max-depth=1 "/var/lib/snapd/snaps/" | grep -wm1 '.*.partial' | tr -d '[:blank:][:alpha:]' | cut -f1 -d'/' | cut -f1 -d'.')
+                PERCENT=$((${PARTIAL_SIZE}00/$INSTALL_SIZE))
+                echo "$PERCENT"
+            else
+                echo 90
+            fi
             echo "Installing $SNAP..."
-            sleep 1
-            FAKEPERCENT=$(($FAKEPERCENT+1))
+            sleep 0.5
         fi
     done | yad --class="yusm" --title="yusm" --window-icon="$RUNNING_DIR/yusm.png" --list --limit=1 --mouse --on-top --text="Installing $SNAP..." --height 300 --width 800 --tail --no-markup --no-escape --button=gtk-close --wrap-width=400 --wrap-cols=2 --no-selection --no-click --column="Progress":BAR --column="Status":TEXT
     exit 1
