@@ -13,7 +13,6 @@ function snapinstall() {
     INSTALL_SIZE=$(snap info $SNAP | grep -m1 'stable:' | tr -d '[:blank:][:alpha:]' | cut -f2 -d')' | cut -f1 -d'-' | cut -f1 -d'.')
     PERCENT=0
     sudo -A snap install "$SNAP" > /tmp/yusmsnapinstallstatus 2>&1 &
-    sleep 2
     while [ -f "/tmp/yusmsnapinstallstatus" ]; do
         if grep -qw 'installed' /tmp/yusmsnapinstallstatus; then
             echo 100
@@ -24,7 +23,10 @@ function snapinstall() {
             echo "Error installing $SNAP!  This revision of snap $SNAP was published using classic confinement and thus may perform arbitrary system changes outside of the security sandbox that snaps are usually confined to, which may put your system at risk.  If you understand and want to proceed, click 'Classic install'."
             rm /tmp/yusmsnapinstallstatus
         else
-            if [ $PERCENT -lt 90 ]; then
+            if [ $PERCENT -lt 10 ]; then
+                echo 0
+                sleep 1
+            elif [ $PERCENT -lt 90 ]; then
                 PARTIAL_SIZE=$(du -h -a --max-depth=1 "/var/lib/snapd/snaps/" | grep -wm1 '.*.partial' | tr -d '[:blank:][:alpha:]' | cut -f1 -d'/' | cut -f1 -d'.')
                 PERCENT=$((${PARTIAL_SIZE}00/$INSTALL_SIZE))
                 echo "$PERCENT"
