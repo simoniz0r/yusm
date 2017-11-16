@@ -14,6 +14,8 @@ function snapinstall() {
     PERCENT=0
     sudo -A snap install "$SNAP" > /tmp/yusmsnapinstallstatus 2>&1 &
     while [ -f "/tmp/yusmsnapinstallstatus" ]; do
+        PARTIAL_SIZE=$(du -h -a --max-depth=1 "/var/lib/snapd/snaps/" | grep -wm1 '.*.partial' | tr -d '[:blank:][:alpha:]' | cut -f1 -d'/' | cut -f1 -d'.')
+        PERCENT=$((${PARTIAL_SIZE}00/$INSTALL_SIZE))
         if grep -qw 'installed' /tmp/yusmsnapinstallstatus; then
             echo 100
             cat /tmp/yusmsnapinstallstatus
@@ -24,14 +26,11 @@ function snapinstall() {
             rm /tmp/yusmsnapinstallstatus
         else
             if [ $PERCENT -lt 10 ]; then
-                echo 0
-                sleep 1
-            elif [ $PERCENT -lt 90 ]; then
-                PARTIAL_SIZE=$(du -h -a --max-depth=1 "/var/lib/snapd/snaps/" | grep -wm1 '.*.partial' | tr -d '[:blank:][:alpha:]' | cut -f1 -d'/' | cut -f1 -d'.')
-                PERCENT=$((${PARTIAL_SIZE}00/$INSTALL_SIZE))
-                echo "$PERCENT"
-            else
+                echo 1
+            elif [ $PERCENT -gt 90 ]; then
                 echo 90
+            else
+                echo "$PERCENT"
             fi
             echo "Installing $SNAP..."
             sleep 0.5
@@ -56,17 +55,19 @@ function snapclassicinstall() {
     touch /tmp/yusmsnapinstallstatus
     sudo -A snap install "$SNAP" --classic > /tmp/yusmsnapinstallstatus 2>&1 &
     while [ -f "/tmp/yusmsnapinstallstatus" ]; do
+        PARTIAL_SIZE=$(du -h -a --max-depth=1 "/var/lib/snapd/snaps/" | grep -wm1 '.*.partial' | tr -d '[:blank:][:alpha:]' | cut -f1 -d'/' | cut -f1 -d'.')
+        PERCENT=$((${PARTIAL_SIZE}00/$INSTALL_SIZE))
         if grep -qw 'installed' /tmp/yusmsnapinstallstatus; then
             echo 100
             cat /tmp/yusmsnapinstallstatus
             rm /tmp/yusmsnapinstallstatus
         else
-            if [ $PERCENT -lt 90 ]; then
-                PARTIAL_SIZE=$(du -h -a --max-depth=1 "/var/lib/snapd/snaps/" | grep -wm1 '.*.partial' | tr -d '[:blank:][:alpha:]' | cut -f1 -d'/' | cut -f1 -d'.')
-                PERCENT=$((${PARTIAL_SIZE}00/$INSTALL_SIZE))
-                echo "$PERCENT"
-            else
+            if [ $PERCENT -lt 10 ]; then
+                echo 1
+            elif [ $PERCENT -gt 90 ]; then
                 echo 90
+            else
+                echo "$PERCENT"
             fi
             echo "Installing $SNAP..."
             sleep 0.5
